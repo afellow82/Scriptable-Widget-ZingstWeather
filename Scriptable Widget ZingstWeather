@@ -1,0 +1,185 @@
+// Widget "ZingstWeather"
+// Jens Hamann (j_hamann@gmx.net)
+// Optimierungen ChatGPT
+
+
+// Version
+const version = "0.01";
+// 27.05.2026
+
+
+// ToDo / Bugs / Ideen: 
+// Versionierung in GitHub
+// Header mit Version
+// Windgeschwindigkeit hinzufügen
+// HTML 30 Minuten cachen
+// Anzeige Uhrzeit Datenstand (Datum, Uhrzeit) in Überschrift
+// Werte rechtsbündig
+// Kleine Abstände hinzufügen
+// Hintergrund einfügen (Bild oder Übergang von Himmel zu Strand)
+// Verlinkung Webseite bei Anklicken
+// Zingst-Logo einbinden
+// Footer mit Version, Alter Cache und Ladezeit
+// Code komplett durchgehen und umschreiben
+// Debug-Ausgabe funktioniert nicht
+
+
+
+
+ // ======================================================
+// Zingst Wetter + Wasser (Scriptable stabil)
+// ======================================================
+
+const url = "https://www.zingst.de/ostsee-wetter-zingst";
+
+const req = new Request(url);
+let html = await req.loadString();
+
+// HTML vereinheitlichen
+html = html.replace(/\s+/g, " ");
+
+// ======================================================
+// HELPER: Abschnitt extrahieren
+// ======================================================
+
+function extractSection(html, startKeywords, endKeywords) {
+  let startIndex = -1;
+
+  for (let k of startKeywords) {
+    startIndex = html.indexOf(k);
+    if (startIndex !== -1) break;
+  }
+
+  if (startIndex === -1) return "";
+
+  let endIndex = -1;
+
+  for (let k of endKeywords) {
+    endIndex = html.indexOf(k, startIndex);
+    if (endIndex !== -1) break;
+  }
+
+  if (endIndex === -1) return "";
+
+  return html.substring(startIndex, endIndex);
+}
+
+// ======================================================
+// WETTER
+// ======================================================
+
+let htmlwetter = extractSection(
+  html,
+  [
+    "Aktuelles Wetter im Ostseeheilbad Zingst",
+    "Aktuelles Wetter Zingst"
+  ],
+  [
+    "Tagesverlauf",
+    "Tagesverlauf – Wetteraussichten"
+  ]
+);
+
+// ======================================================
+// WASSER
+// ======================================================
+
+let htmlwasser = extractSection(
+  html,
+  [
+    "Wassertemperaturen an der Küste",
+    "Wassertemperaturen an der Ostseeküste"
+  ],
+  [
+    "Unterschied zwischen Wassertemperatur und Badetemperatur"
+  ]
+);
+
+// ======================================================
+// HELPER: Regex Extract
+// ======================================================
+
+function matchValue(section, regex) {
+  let m = section.match(regex);
+  return m ? m[1] : "n/a";
+}
+
+// ======================================================
+// DATEN EXTRAKTION
+// ======================================================
+
+// Temperatur + gefühlte Temperatur (Wetter-Block)
+let temp = matchValue(htmlwetter, /Temperatur[^0-9]*(-?\d+)\s?°/i);
+let feelsLike = matchValue(htmlwetter, /Gefühlte Temperatur[^0-9]*(-?\d+)\s?°/i);
+
+// Wassertemperatur (Wasser-Block)
+let waterTemp = matchValue(htmlwasser, /(\d+)\s?°/i);
+
+// Wellenhöhe (oft im selben oder nahe Bereich)
+let waveHeight = "n/a";
+
+let match = html.match(/Wellenhöhe[\s\S]{0,200}?([\d]+[.,]\d+)\s*m/i);
+
+if (match) {
+  waveHeight = match[1].replace(".", ",") + " m";
+}
+
+function matchTime(html, label) {
+  let regex = new RegExp(label + "\\s*:?\\s*(\\d{2}:\\d{2})", "i");
+  let m = html.match(regex);
+  return m ? m[1] : "n/a";
+}
+
+let sunriseTomorrow = matchTime(html, "Sonnenaufgang morgen");
+let sunsetTomorrow = matchTime(html, "Sonnenuntergang morgen");
+
+// ======================================================
+// OUTPUT DEBUG
+// ======================================================
+
+console.log("===== WETTER =====");
+console.log(htmlwetter || "NICHT GEFUNDEN");
+
+console.log("\n===== WASSER =====");
+console.log(htmlwasser || "NICHT GEFUNDEN");
+
+console.log("\n===== PARSED VALUES =====");
+console.log("Temperatur:", temp);
+console.log("Gefühlt:", feelsLike);
+console.log("Wasser:", waterTemp);
+console.log("Wellenhöhe:", waveHeight);
+
+// ======================================================
+// WIDGET
+// ======================================================
+
+let widget = new ListWidget();
+
+let title = widget.addText("Wetter und Wasser in Zingst");
+title.font = Font.boldSystemFont(14);
+
+widget.addSpacer(6);
+
+let t1 = widget.addText(`🌡️ Temperatur: ${temp}°C`);
+t1.font = Font.systemFont(12);
+
+let t2 = widget.addText(`🤔 Gefühlte Temperatur: ${feelsLike}°C`);
+t2.font = Font.systemFont(12);
+
+let t3 = widget.addText(`🌊 Wassertemperatur: ${waterTemp}°C`);
+t3.font = Font.systemFont(12);
+
+let t4 = widget.addText(`📏 Wellenhöhe: ${waveHeight}`);
+t4.font = Font.systemFont(12);
+
+let t5 = widget.addText(`🌅 Sonnenaufgang morgen: ${sunriseTomorrow} Uhr`);
+t5.font = Font.systemFont(12);
+
+let t6 = widget.addText(`🌇 Sonnenuntergang morgen: ${sunsetTomorrow} Uhr`);
+t6.font = Font.systemFont(12);
+
+widget.addSpacer();
+
+widget.presentMedium();
+Script.setWidget(widget);
+Script.complete();
