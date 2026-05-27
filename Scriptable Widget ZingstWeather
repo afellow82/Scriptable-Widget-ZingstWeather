@@ -4,13 +4,11 @@
 
 
 // Version
-const version = "0.01";
+const version = "0.02";
 // 27.05.2026
 
 
 // ToDo / Bugs / Ideen: 
-// Versionierung in GitHub
-// Header mit Version
 // Windgeschwindigkeit hinzufügen
 // HTML 30 Minuten cachen
 // Anzeige Uhrzeit Datenstand (Datum, Uhrzeit) in Überschrift
@@ -20,53 +18,16 @@ const version = "0.01";
 // Verlinkung Webseite bei Anklicken
 // Zingst-Logo einbinden
 // Footer mit Version, Alter Cache und Ladezeit
-// Code komplett durchgehen und umschreiben
 // Debug-Ausgabe funktioniert nicht
 
-
-
-
- // ======================================================
-// Zingst Wetter + Wasser (Scriptable stabil)
-// ======================================================
 
 const url = "https://www.zingst.de/ostsee-wetter-zingst";
 
 const req = new Request(url);
 let html = await req.loadString();
 
-// HTML vereinheitlichen
 html = html.replace(/\s+/g, " ");
 
-// ======================================================
-// HELPER: Abschnitt extrahieren
-// ======================================================
-
-function extractSection(html, startKeywords, endKeywords) {
-  let startIndex = -1;
-
-  for (let k of startKeywords) {
-    startIndex = html.indexOf(k);
-    if (startIndex !== -1) break;
-  }
-
-  if (startIndex === -1) return "";
-
-  let endIndex = -1;
-
-  for (let k of endKeywords) {
-    endIndex = html.indexOf(k, startIndex);
-    if (endIndex !== -1) break;
-  }
-
-  if (endIndex === -1) return "";
-
-  return html.substring(startIndex, endIndex);
-}
-
-// ======================================================
-// WETTER
-// ======================================================
 
 let htmlwetter = extractSection(
   html,
@@ -80,10 +41,6 @@ let htmlwetter = extractSection(
   ]
 );
 
-// ======================================================
-// WASSER
-// ======================================================
-
 let htmlwasser = extractSection(
   html,
   [
@@ -95,48 +52,28 @@ let htmlwasser = extractSection(
   ]
 );
 
-// ======================================================
-// HELPER: Regex Extract
-// ======================================================
 
-function matchValue(section, regex) {
-  let m = section.match(regex);
-  return m ? m[1] : "n/a";
-}
-
-// ======================================================
-// DATEN EXTRAKTION
-// ======================================================
-
-// Temperatur + gefühlte Temperatur (Wetter-Block)
+// data extraction
+// temperatur, felt air temperatur
 let temp = matchValue(htmlwetter, /Temperatur[^0-9]*(-?\d+)\s?°/i);
 let feelsLike = matchValue(htmlwetter, /Gefühlte Temperatur[^0-9]*(-?\d+)\s?°/i);
 
-// Wassertemperatur (Wasser-Block)
+// water temperatur
 let waterTemp = matchValue(htmlwasser, /(\d+)\s?°/i);
 
-// Wellenhöhe (oft im selben oder nahe Bereich)
+// wave height
 let waveHeight = "n/a";
-
 let match = html.match(/Wellenhöhe[\s\S]{0,200}?([\d]+[.,]\d+)\s*m/i);
-
 if (match) {
   waveHeight = match[1].replace(".", ",") + " m";
 }
 
-function matchTime(html, label) {
-  let regex = new RegExp(label + "\\s*:?\\s*(\\d{2}:\\d{2})", "i");
-  let m = html.match(regex);
-  return m ? m[1] : "n/a";
-}
-
+// time sunrise and sunset
 let sunriseTomorrow = matchTime(html, "Sonnenaufgang morgen");
 let sunsetTomorrow = matchTime(html, "Sonnenuntergang morgen");
 
-// ======================================================
-// OUTPUT DEBUG
-// ======================================================
 
+// debugging
 console.log("===== WETTER =====");
 console.log(htmlwetter || "NICHT GEFUNDEN");
 
@@ -149,10 +86,7 @@ console.log("Gefühlt:", feelsLike);
 console.log("Wasser:", waterTemp);
 console.log("Wellenhöhe:", waveHeight);
 
-// ======================================================
-// WIDGET
-// ======================================================
-
+// widget
 let widget = new ListWidget();
 
 let title = widget.addText("Wetter und Wasser in Zingst");
@@ -183,3 +117,42 @@ widget.addSpacer();
 widget.presentMedium();
 Script.setWidget(widget);
 Script.complete();
+
+
+// function extract section from HTML
+function extractSection(html, startKeywords, endKeywords) {
+  let startIndex = -1;
+
+  for (let k of startKeywords) {
+    startIndex = html.indexOf(k);
+    if (startIndex !== -1) break;
+  }
+
+  if (startIndex === -1) return "";
+
+  let endIndex = -1;
+
+  for (let k of endKeywords) {
+    endIndex = html.indexOf(k, startIndex);
+    if (endIndex !== -1) break;
+  }
+
+  if (endIndex === -1) return "";
+
+  return html.substring(startIndex, endIndex);
+}
+
+
+// function extract time for sunrise and sunset
+function matchTime(html, label) {
+  let regex = new RegExp(label + "\\s*:?\\s*(\\d{2}:\\d{2})", "i");
+  let m = html.match(regex);
+  return m ? m[1] : "n/a";
+}
+
+
+// function extract values
+function matchValue(section, regex) {
+  let m = section.match(regex);
+  return m ? m[1] : "n/a";
+}
