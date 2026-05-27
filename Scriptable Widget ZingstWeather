@@ -4,17 +4,14 @@
 
 
 // Version
-const version = "0.05";
+const version = "0.06";
 // 27.05.2026
 
 
 // ToDo / Bugs / Ideen:
-// Anzeige Uhrzeit Datenstand (Datum, Uhrzeit) in Überschrift
 // Werte rechtsbündig
-// Kleine Abstände hinzufügen
 // Hintergrund einfügen (Bild oder Übergang von Himmel zu Strand)
 // Verlinkung Webseite bei Anklicken
-// Zingst-Logo einbinden
 // Zingst-Logo 2 Stunden cachen
 // ChatGPT alles prüfen und verbessern lassen
 
@@ -147,8 +144,7 @@ if (windDirMatch) {
   windDirection = windDirMatch[1];
 }
 
-// time sunrise and sunset
-let sunriseTomorrow = matchTime(html, "Sonnenaufgang morgen");
+// time sunset
 let sunsetTomorrow = matchTime(html, "Sonnenuntergang morgen");
 
 
@@ -173,10 +169,7 @@ debugLog(1, `Windrichtung: ${windDirection}`);
 let widget = new ListWidget();
 
 
-// ======================================================
-// HEADER (LOGO + TITEL)
-// ======================================================
-
+// header with logo
 const logoUrl = "https://www.reisereporter.de/resizer/v2/YFR5QLLCMZJFM3SD423A2VDEL2.jpg?auth=a81fbdea5b18e4b81090aaf861ea14226892b5cb8601ba8b354fc91624684f53&quality=70&height=90";
 
 const logoReq = new Request(logoUrl);
@@ -185,19 +178,45 @@ const logoImg = await logoReq.loadImage();
 let header = widget.addStack();
 header.centerAlignContent();
 
+// left: logo
 let logo = header.addImage(logoImg);
 logo.imageSize = new Size(40, 40);
-//logo.cornerRadius = 6;
 
-header.addSpacer(8);
+header.addSpacer(10);
 
-let title = header.addText("Wetter und Wasser");
+// right: 2 lines text
+let right = header.addStack();
+right.layoutVertically();
+right.centerAlignContent();
+
+// line 1
+let title = right.addText("Wetter und Wasser");
 title.font = Font.boldSystemFont(14);
 
-widget.addSpacer(6);
+// line 2
+const now = new Date();
+
+const dateStr = now.toLocaleDateString("de-DE", {
+  day: "2-digit",
+  month: "2-digit",
+  year: "numeric"
+});
+
+const timeStr = now.toLocaleTimeString("de-DE", {
+  hour: "2-digit",
+  minute: "2-digit"
+});
+
+let stand = right.addText(`Stand: ${dateStr} ${timeStr} Uhr`);
+stand.font = Font.systemFont(10);
+stand.textColor = Color.gray();
+
+widget.addSpacer(4);
 
 let t1 = widget.addText(`🌡️ Temperatur: ${temp}°C (gefühlt: ${feelsLike}°C)`);
 t1.font = Font.systemFont(12);
+
+widget.addSpacer(5);
 
 let t3 = widget.addText(`🌊 Wassertemperatur: ${waterTemp}°C`);
 t3.font = Font.systemFont(12);
@@ -208,8 +227,7 @@ t4.font = Font.systemFont(12);
 let tWind = widget.addText(`💨 Wind: ${windSpeed} km/h (${windDirection})`);
 tWind.font = Font.systemFont(12);
 
-let t5 = widget.addText(`🌅 Sonnenaufgang morgen: ${sunriseTomorrow} Uhr`);
-t5.font = Font.systemFont(12);
+widget.addSpacer(5);
 
 let t6 = widget.addText(`🌇 Sonnenuntergang morgen: ${sunsetTomorrow} Uhr`);
 t6.font = Font.systemFont(12);
