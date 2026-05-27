@@ -21,6 +21,10 @@ const version = "0.02";
 // Debug-Ausgabe funktioniert nicht
 
 
+// Debuglevel
+let debuglevel = 1;
+
+
 const url = "https://www.zingst.de/ostsee-wetter-zingst";
 
 const req = new Request(url);
@@ -29,7 +33,7 @@ let html = await req.loadString();
 html = html.replace(/\s+/g, " ");
 
 
-let htmlwetter = extractSection(
+let htmlweather = extractSection(
   html,
   [
     "Aktuelles Wetter im Ostseeheilbad Zingst",
@@ -41,7 +45,7 @@ let htmlwetter = extractSection(
   ]
 );
 
-let htmlwasser = extractSection(
+let htmlwater = extractSection(
   html,
   [
     "Wassertemperaturen an der Küste",
@@ -55,11 +59,11 @@ let htmlwasser = extractSection(
 
 // data extraction
 // temperatur, felt air temperatur
-let temp = matchValue(htmlwetter, /Temperatur[^0-9]*(-?\d+)\s?°/i);
-let feelsLike = matchValue(htmlwetter, /Gefühlte Temperatur[^0-9]*(-?\d+)\s?°/i);
+let temp = matchValue(htmlweather, /Temperatur[^0-9]*(-?\d+)\s?°/i);
+let feelsLike = matchValue(htmlweather, /Gefühlte Temperatur[^0-9]*(-?\d+)\s?°/i);
 
 // water temperatur
-let waterTemp = matchValue(htmlwasser, /(\d+)\s?°/i);
+let waterTemp = matchValue(htmlwater, /(\d+)\s?°/i);
 
 // wave height
 let waveHeight = "n/a";
@@ -74,17 +78,19 @@ let sunsetTomorrow = matchTime(html, "Sonnenuntergang morgen");
 
 
 // debugging
-console.log("===== WETTER =====");
-console.log(htmlwetter || "NICHT GEFUNDEN");
+debugLog(1, "===== HTML weather =====");
+debugLog(1, htmlweather);
+logDivider(1);
 
-console.log("\n===== WASSER =====");
-console.log(htmlwasser || "NICHT GEFUNDEN");
+debugLog(1, "===== HTML water =====");
+debugLog(1, htmlwater);
+logDivider(1);
 
-console.log("\n===== PARSED VALUES =====");
-console.log("Temperatur:", temp);
-console.log("Gefühlt:", feelsLike);
-console.log("Wasser:", waterTemp);
-console.log("Wellenhöhe:", waveHeight);
+debugLog(1, "===== PARSED VALUES =====");
+debugLog(1, `Temperatur: ${temp}`);
+debugLog(1, `Gefühlt: ${feelsLike}`);
+debugLog(1, `Wasser: ${waterTemp}`);
+debugLog(1, `Wellenhöhe: ${waveHeight}`);
 
 // widget
 let widget = new ListWidget();
@@ -155,4 +161,16 @@ function matchTime(html, label) {
 function matchValue(section, regex) {
   let m = section.match(regex);
   return m ? m[1] : "n/a";
+}
+
+
+// function debugDivider
+function logDivider(level) {
+  if (debuglevel >= level) console.log("-------------------");
+}
+
+
+// function debugLog
+function debugLog(level, text) {
+  if (debuglevel >= level) console.log(text);
 }
