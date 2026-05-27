@@ -4,32 +4,89 @@
 
 
 // Version
-const version = "0.03";
+const version = "0.04";
 // 27.05.2026
 
 
-// ToDo / Bugs / Ideen: 
-// Windgeschwindigkeit hinzufügen
-// HTML 30 Minuten cachen
+// ToDo / Bugs / Ideen:
 // Anzeige Uhrzeit Datenstand (Datum, Uhrzeit) in Überschrift
 // Werte rechtsbündig
 // Kleine Abstände hinzufügen
 // Hintergrund einfügen (Bild oder Übergang von Himmel zu Strand)
 // Verlinkung Webseite bei Anklicken
 // Zingst-Logo einbinden
-// Footer mit Version, Alter Cache und Ladezeit
-// Debug-Ausgabe funktioniert nicht
+// ChatGPT alles prüfen und verbessern lassen
 
+const startTime = Date.now();
 
 // Debuglevel
-let debuglevel = 1;
+let debuglevel = 0;
 
 
 const url = "https://www.zingst.de/ostsee-wetter-zingst";
 
-const req = new Request(url);
-let html = await req.loadString();
+// ======================================================
+// CACHE HTML (30 Minuten)
+// ======================================================
 
+const cacheMinutes = 30;
+
+const fm = FileManager.local();
+const cachePath = fm.joinPath(
+  fm.cacheDirectory(),
+  "zingst_weather_cache.html"
+);
+
+let html;
+let cacheAgeMinutes = -1;
+
+// Prüfen ob Cache existiert
+if (fm.fileExists(cachePath)) {
+
+  // Alter des Cache berechnen
+  const creationDate = fm.modificationDate(cachePath);
+  const now = new Date();
+
+  cacheAgeMinutes =
+    (now.getTime() - creationDate.getTime()) / 1000 / 60;
+
+  debugLog(1, `Cache Alter: ${cacheAgeMinutes.toFixed(1)} Minuten`);
+
+  // Wenn Cache jünger als 30 Minuten → benutzen
+  if (cacheAgeMinutes < cacheMinutes) {
+
+    debugLog(1, "Benutze Cache-Datei");
+
+    html = fm.readString(cachePath);
+
+  } else {
+
+    debugLog(1, "Cache zu alt → lade neu");
+
+    const req = new Request(url);
+    html = await req.loadString();
+
+    // neuen Cache speichern
+    fm.writeString(cachePath, html);
+
+    cacheAgeMinutes = 0;
+  }
+
+} else {
+
+  // Kein Cache vorhanden
+  debugLog(1, "Kein Cache vorhanden → lade neu");
+
+  const req = new Request(url);
+  html = await req.loadString();
+
+  // Cache speichern
+  fm.writeString(cachePath, html);
+
+  cacheAgeMinutes = 0;
+}
+
+// HTML vereinheitlichen
 html = html.replace(/\s+/g, " ");
 
 
@@ -141,6 +198,20 @@ let t6 = widget.addText(`🌇 Sonnenuntergang morgen: ${sunsetTomorrow} Uhr`);
 t6.font = Font.systemFont(12);
 
 widget.addSpacer();
+
+const endTime = Date.now();
+const loadingTime = ((endTime - startTime)/1000).toFixed(1).replace('.', ',');
+
+// output footer
+let footerStack = widget.addStack();
+footerStack.addSpacer();
+
+let footer = footerStack.addText(
+  `[v${version}, ${cacheAgeMinutes.toFixed(0)} min, ${loadingTime} s]`
+);
+
+footer.font = Font.systemFont(8);
+footer.textColor = Color.gray();
 
 widget.presentMedium();
 Script.setWidget(widget);
