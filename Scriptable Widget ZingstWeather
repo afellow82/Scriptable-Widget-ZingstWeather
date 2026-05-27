@@ -4,7 +4,7 @@
 
 
 // Version
-const version = "0.06";
+const version = "0.07";
 // 27.05.2026
 
 
@@ -13,6 +13,8 @@ const version = "0.06";
 // Hintergrund einfügen (Bild oder Übergang von Himmel zu Strand)
 // Verlinkung Webseite bei Anklicken
 // Zingst-Logo 2 Stunden cachen
+// Ladezeit reduzieren
+// Kontrolle: Sind alle Werte identisch zu Webseite?
 // ChatGPT alles prüfen und verbessern lassen
 
 const startTime = Date.now();
@@ -118,7 +120,10 @@ let temp = matchValue(htmlweather, /Temperatur[^0-9]*(-?\d+)\s?°/i);
 let feelsLike = matchValue(htmlweather, /Gefühlte Temperatur[^0-9]*(-?\d+)\s?°/i);
 
 // water temperatur
-let waterTemp = matchValue(htmlwater, /(\d+)\s?°/i);
+let waterTemp = matchValue(
+  htmlwater,
+  /Wassertemperatur:\s*<[^>]*>\s*(\d+)\s*°/i
+);
 
 // wave height
 let waveHeight = "n/a";
