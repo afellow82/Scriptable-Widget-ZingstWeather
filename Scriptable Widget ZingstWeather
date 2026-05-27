@@ -4,7 +4,7 @@
 
 
 // Version
-const version = "0.02";
+const version = "0.03";
 // 27.05.2026
 
 
@@ -72,6 +72,23 @@ if (match) {
   waveHeight = match[1].replace(".", ",") + " m";
 }
 
+// wind speed
+let windSpeed = matchValue(
+  htmlweather,
+  /Wind:\s*([\d]+[.,]\d+)\s*km\/h/i
+);
+
+// wind direction
+let windDirection = "n/a";
+
+let windDirMatch = htmlweather.match(
+  /<\/span>\s*([A-Za-zÄÖÜäöüß]+)\s*<\/div>/i
+);
+
+if (windDirMatch) {
+  windDirection = windDirMatch[1];
+}
+
 // time sunrise and sunset
 let sunriseTomorrow = matchTime(html, "Sonnenaufgang morgen");
 let sunsetTomorrow = matchTime(html, "Sonnenuntergang morgen");
@@ -91,6 +108,8 @@ debugLog(1, `Temperatur: ${temp}`);
 debugLog(1, `Gefühlt: ${feelsLike}`);
 debugLog(1, `Wasser: ${waterTemp}`);
 debugLog(1, `Wellenhöhe: ${waveHeight}`);
+debugLog(1, `Wind: ${windSpeed} km/h`);
+debugLog(1, `Windrichtung: ${windDirection}`);
 
 // widget
 let widget = new ListWidget();
@@ -111,6 +130,9 @@ t3.font = Font.systemFont(12);
 
 let t4 = widget.addText(`📏 Wellenhöhe: ${waveHeight}`);
 t4.font = Font.systemFont(12);
+
+let tWind = widget.addText(`💨 Wind: ${windSpeed} km/h (${windDirection})`);
+tWind.font = Font.systemFont(12);
 
 let t5 = widget.addText(`🌅 Sonnenaufgang morgen: ${sunriseTomorrow} Uhr`);
 t5.font = Font.systemFont(12);
