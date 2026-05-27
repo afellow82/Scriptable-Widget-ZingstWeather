@@ -4,7 +4,7 @@
 
 
 // Version
-const version = "0.04";
+const version = "0.05";
 // 27.05.2026
 
 
@@ -15,6 +15,7 @@ const version = "0.04";
 // Hintergrund einfügen (Bild oder Übergang von Himmel zu Strand)
 // Verlinkung Webseite bei Anklicken
 // Zingst-Logo einbinden
+// Zingst-Logo 2 Stunden cachen
 // ChatGPT alles prüfen und verbessern lassen
 
 const startTime = Date.now();
@@ -171,16 +172,32 @@ debugLog(1, `Windrichtung: ${windDirection}`);
 // widget
 let widget = new ListWidget();
 
-let title = widget.addText("Wetter und Wasser in Zingst");
+
+// ======================================================
+// HEADER (LOGO + TITEL)
+// ======================================================
+
+const logoUrl = "https://www.reisereporter.de/resizer/v2/YFR5QLLCMZJFM3SD423A2VDEL2.jpg?auth=a81fbdea5b18e4b81090aaf861ea14226892b5cb8601ba8b354fc91624684f53&quality=70&height=90";
+
+const logoReq = new Request(logoUrl);
+const logoImg = await logoReq.loadImage();
+
+let header = widget.addStack();
+header.centerAlignContent();
+
+let logo = header.addImage(logoImg);
+logo.imageSize = new Size(40, 40);
+//logo.cornerRadius = 6;
+
+header.addSpacer(8);
+
+let title = header.addText("Wetter und Wasser");
 title.font = Font.boldSystemFont(14);
 
 widget.addSpacer(6);
 
-let t1 = widget.addText(`🌡️ Temperatur: ${temp}°C`);
+let t1 = widget.addText(`🌡️ Temperatur: ${temp}°C (gefühlt: ${feelsLike}°C)`);
 t1.font = Font.systemFont(12);
-
-let t2 = widget.addText(`🤔 Gefühlte Temperatur: ${feelsLike}°C`);
-t2.font = Font.systemFont(12);
 
 let t3 = widget.addText(`🌊 Wassertemperatur: ${waterTemp}°C`);
 t3.font = Font.systemFont(12);
