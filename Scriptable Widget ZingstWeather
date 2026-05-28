@@ -3,16 +3,16 @@
 // Optimierungen ChatGPT
 
 // Version
-const version = "0.14";
+const version = "1.00";
 // 28.05.2026
 
 // ToDo / Bugs / Ideen:
-// ChatGPT alles prüfen und verbessern lassen
+// <keine>
 
 const startTime = Date.now();
 
 // Debuglevel
-let debuglevel = 1;
+let debuglevel = 0;
 
 const url = "https://www.zingst.de/ostsee-wetter-zingst";
 
@@ -20,6 +20,16 @@ const url = "https://www.zingst.de/ostsee-wetter-zingst";
 const cacheMinutes = 30;
 
 const fm = FileManager.local();
+
+cleanupCache(
+  fm.joinPath(fm.cacheDirectory(), "zingst_weather_cache.html"),
+  7
+);
+
+cleanupCache(
+  fm.joinPath(fm.cacheDirectory(), "zingst_weather_bg.jpg"),
+  30
+);
 
 const cachePath = fm.joinPath(
   fm.cacheDirectory(),
@@ -132,6 +142,7 @@ if (windDirMatch) {
 let sunset = matchTime(html, "Sonnenuntergang");
 
 // debugging
+logDivider(1);
 debugLog(1, "===== HTML weather =====");
 debugLog(1, htmlweather);
 logDivider(1);
@@ -147,6 +158,7 @@ debugLog(1, `Wasser: ${waterTemp}`);
 debugLog(1, `Wellenhöhe: ${waveHeight}`);
 debugLog(1, `Wind: ${windSpeed} km/h`);
 debugLog(1, `Windrichtung: ${windDirection}`);
+debugLog(1, `Sonnenuntergang: ${sunset}`);
 
 // widget with background
 let widget = new ListWidget();
@@ -199,8 +211,6 @@ overlay.colors = [
 ];
 
 widget.backgroundGradient = overlay;
-
-widget.setPadding(12, 12, 12, 12);
 
 // fonts
 let headerTextSize = 14;
@@ -338,6 +348,28 @@ function matchTime(html, label) {
 function matchValue(section, regex) {
   let m = section.match(regex);
   return m ? m[1] : "n/a";
+}
+
+function cleanupCache(path, maxDays = 7) {
+
+  if (!fm.fileExists(path)) return;
+
+  const ageDays =
+    (Date.now() - fm.modificationDate(path).getTime())
+    / 1000 / 60 / 60 / 24;
+
+  debugLog(1, `Cache-Datei Alter: ${ageDays.toFixed(1)} Tage`);
+
+  if (ageDays > maxDays) {
+
+    debugLog(1, `Lösche alte Cache-Datei: ${path}`);
+
+    try {
+      fm.remove(path);
+    } catch (e) {
+      debugLog(0, `Fehler beim Löschen: ${e}`);
+    }
+  }
 }
 
 function logDivider(level) {
