@@ -3,7 +3,7 @@
 // Optimierungen ChatGPT
 
 // Version
-const version = "0.13";
+const version = "0.14";
 // 28.05.2026
 
 // ToDo / Bugs / Ideen:
@@ -129,7 +129,7 @@ if (windDirMatch) {
   windDirection = windDirMatch[1];
 }
 
-let sunsetTomorrow = matchTime(html, "Sonnenuntergang morgen");
+let sunset = matchTime(html, "Sonnenuntergang");
 
 // debugging
 debugLog(1, "===== HTML weather =====");
@@ -268,7 +268,7 @@ tWind.textColor = Color.white();
 widget.addSpacer(5);
 
 let t6 = widget.addText(
-  `Sonnenuntergang (morgen): ${sunsetTomorrow} Uhr`
+  `Sonnenuntergang: ${sunset} Uhr`
 );
 t6.font = Font.systemFont(mainTextSize);
 t6.textColor = Color.white();
