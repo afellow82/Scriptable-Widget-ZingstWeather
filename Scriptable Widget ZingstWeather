@@ -2,17 +2,12 @@
 // Jens Hamann (j_hamann@gmx.net)
 // Optimierungen ChatGPT
 
-
 // Version
-const version = "0.07";
-// 27.05.2026
-
+const version = "0.09";
+// 28.05.2026
 
 // ToDo / Bugs / Ideen:
-// Werte rechtsbündig
-// Hintergrund einfügen (Bild oder Übergang von Himmel zu Strand)
 // Verlinkung Webseite bei Anklicken
-// Zingst-Logo 2 Stunden cachen
 // Ladezeit reduzieren
 // Kontrolle: Sind alle Werte identisch zu Webseite?
 // ChatGPT alles prüfen und verbessern lassen
@@ -21,7 +16,6 @@ const startTime = Date.now();
 
 // Debuglevel
 let debuglevel = 0;
-
 
 const url = "https://www.zingst.de/ostsee-wetter-zingst";
 
@@ -32,6 +26,7 @@ const url = "https://www.zingst.de/ostsee-wetter-zingst";
 const cacheMinutes = 30;
 
 const fm = FileManager.local();
+
 const cachePath = fm.joinPath(
   fm.cacheDirectory(),
   "zingst_weather_cache.html"
@@ -43,7 +38,6 @@ let cacheAgeMinutes = -1;
 // Prüfen ob Cache existiert
 if (fm.fileExists(cachePath)) {
 
-  // Alter des Cache berechnen
   const creationDate = fm.modificationDate(cachePath);
   const now = new Date();
 
@@ -52,7 +46,6 @@ if (fm.fileExists(cachePath)) {
 
   debugLog(1, `Cache Alter: ${cacheAgeMinutes.toFixed(1)} Minuten`);
 
-  // Wenn Cache jünger als 30 Minuten → benutzen
   if (cacheAgeMinutes < cacheMinutes) {
 
     debugLog(1, "Benutze Cache-Datei");
@@ -66,7 +59,6 @@ if (fm.fileExists(cachePath)) {
     const req = new Request(url);
     html = await req.loadString();
 
-    // neuen Cache speichern
     fm.writeString(cachePath, html);
 
     cacheAgeMinutes = 0;
@@ -74,13 +66,11 @@ if (fm.fileExists(cachePath)) {
 
 } else {
 
-  // Kein Cache vorhanden
   debugLog(1, "Kein Cache vorhanden → lade neu");
 
   const req = new Request(url);
   html = await req.loadString();
 
-  // Cache speichern
   fm.writeString(cachePath, html);
 
   cacheAgeMinutes = 0;
@@ -89,6 +79,9 @@ if (fm.fileExists(cachePath)) {
 // HTML vereinheitlichen
 html = html.replace(/\s+/g, " ");
 
+// ======================================================
+// HTML ABSCHNITTE
+// ======================================================
 
 let htmlweather = extractSection(
   html,
@@ -113,32 +106,32 @@ let htmlwater = extractSection(
   ]
 );
 
+// ======================================================
+// DATEN EXTRAHIEREN
+// ======================================================
 
-// data extraction
-// temperatur, felt air temperatur
 let temp = matchValue(htmlweather, /Temperatur[^0-9]*(-?\d+)\s?°/i);
+
 let feelsLike = matchValue(htmlweather, /Gefühlte Temperatur[^0-9]*(-?\d+)\s?°/i);
 
-// water temperatur
 let waterTemp = matchValue(
   htmlwater,
   /Wassertemperatur:\s*<[^>]*>\s*(\d+)\s*°/i
 );
 
-// wave height
 let waveHeight = "n/a";
+
 let match = html.match(/Wellenhöhe[\s\S]{0,200}?([\d]+[.,]\d+)\s*m/i);
+
 if (match) {
   waveHeight = match[1].replace(".", ",") + " m";
 }
 
-// wind speed
 let windSpeed = matchValue(
   htmlweather,
   /Wind:\s*([\d]+[.,]\d+)\s*km\/h/i
 );
 
-// wind direction
 let windDirection = "n/a";
 
 let windDirMatch = htmlweather.match(
@@ -149,18 +142,11 @@ if (windDirMatch) {
   windDirection = windDirMatch[1];
 }
 
-// time sunset
 let sunsetTomorrow = matchTime(html, "Sonnenuntergang morgen");
 
-
-// debugging
-debugLog(1, "===== HTML weather =====");
-debugLog(1, htmlweather);
-logDivider(1);
-
-debugLog(1, "===== HTML water =====");
-debugLog(1, htmlwater);
-logDivider(1);
+// ======================================================
+// DEBUG
+// ======================================================
 
 debugLog(1, "===== PARSED VALUES =====");
 debugLog(1, `Temperatur: ${temp}`);
@@ -170,35 +156,73 @@ debugLog(1, `Wellenhöhe: ${waveHeight}`);
 debugLog(1, `Wind: ${windSpeed} km/h`);
 debugLog(1, `Windrichtung: ${windDirection}`);
 
-// widget
+// ======================================================
+// WIDGET + HINTERGRUND
+// ======================================================
+
 let widget = new ListWidget();
 
+widget.url = url;
 
-// header with logo
-const logoUrl = "https://www.reisereporter.de/resizer/v2/YFR5QLLCMZJFM3SD423A2VDEL2.jpg?auth=a81fbdea5b18e4b81090aaf861ea14226892b5cb8601ba8b354fc91624684f53&quality=70&height=90";
+// Hintergrundbild
+const imageUrl = "https://www.ostsee-und-wellness.de/ostseeurlaub/fischland-darss-zingst/urlaub-darss-zingst-gross.jpg";
 
-const logoReq = new Request(logoUrl);
-const logoImg = await logoReq.loadImage();
+const bgCachePath = fm.joinPath(
+  fm.cacheDirectory(),
+  "zingst_weather_bg.jpg"
+);
 
+let bgImage;
+
+const bgMaxAge = 24 * 60 * 60 * 1000;
+
+if (fm.fileExists(bgCachePath)) {
+
+  const modDate = fm.modificationDate(bgCachePath);
+
+  if ((Date.now() - modDate.getTime()) < bgMaxAge) {
+
+    bgImage = fm.readImage(bgCachePath);
+
+  } else {
+
+    const req = new Request(imageUrl);
+    bgImage = await req.loadImage();
+
+    fm.writeImage(bgCachePath, bgImage);
+  }
+
+} else {
+
+  const req = new Request(imageUrl);
+  bgImage = await req.loadImage();
+
+  fm.writeImage(bgCachePath, bgImage);
+}
+
+widget.backgroundImage = bgImage;
+
+const overlay = new LinearGradient();
+overlay.locations = [0, 1];
+overlay.colors = [
+  new Color("#000000", 0.15),
+  new Color("#000000", 0.55)
+];
+
+widget.backgroundGradient = overlay;
+
+widget.setPadding(12, 12, 12, 12);
+
+// header
 let header = widget.addStack();
-header.centerAlignContent();
+header.layoutVertically();
 
-// left: logo
-let logo = header.addImage(logoImg);
-logo.imageSize = new Size(40, 40);
-
-header.addSpacer(10);
-
-// right: 2 lines text
-let right = header.addStack();
-right.layoutVertically();
-right.centerAlignContent();
-
-// line 1
-let title = right.addText("Wetter und Wasser");
+// Titel
+let title = header.addText("Wetter und Wasser im Ostseeheilbad Zingst");
 title.font = Font.boldSystemFont(14);
+title.textColor = Color.white();
 
-// line 2
+// date / time
 const now = new Date();
 
 const dateStr = now.toLocaleDateString("de-DE", {
@@ -212,37 +236,71 @@ const timeStr = now.toLocaleTimeString("de-DE", {
   minute: "2-digit"
 });
 
-let stand = right.addText(`Stand: ${dateStr} ${timeStr} Uhr`);
+let stand = header.addText(
+  `Stand: ${dateStr} ${timeStr} Uhr`
+);
+
 stand.font = Font.systemFont(10);
-stand.textColor = Color.gray();
+stand.textColor = new Color("#FFFFFF", 0.8);
+
+widget.addSpacer(6);
+
+// ======================================================
+// WETTERDATEN
+// ======================================================
+
+let t1 = widget.addText(
+  `🌡️ Temperatur: ${temp}°C (gefühlt: ${feelsLike}°C)`
+);
+t1.font = Font.systemFont(12);
+t1.textColor = Color.white();
 
 widget.addSpacer(4);
 
-let t1 = widget.addText(`🌡️ Temperatur: ${temp}°C (gefühlt: ${feelsLike}°C)`);
-t1.font = Font.systemFont(12);
-
-widget.addSpacer(5);
-
-let t3 = widget.addText(`🌊 Wassertemperatur: ${waterTemp}°C`);
+let t3 = widget.addText(
+  `🌊 Wassertemperatur: ${waterTemp}°C`
+);
 t3.font = Font.systemFont(12);
+t3.textColor = Color.white();
 
-let t4 = widget.addText(`📏 Wellenhöhe: ${waveHeight}`);
+widget.addSpacer(2);
+
+let t4 = widget.addText(
+  `📏 Wellenhöhe: ${waveHeight}`
+);
 t4.font = Font.systemFont(12);
+t4.textColor = Color.white();
 
-let tWind = widget.addText(`💨 Wind: ${windSpeed} km/h (${windDirection})`);
+widget.addSpacer(2);
+
+let tWind = widget.addText(
+  `💨 Wind: ${windSpeed} km/h (${windDirection})`
+);
 tWind.font = Font.systemFont(12);
+tWind.textColor = Color.white();
 
-widget.addSpacer(5);
+widget.addSpacer(4);
 
-let t6 = widget.addText(`🌇 Sonnenuntergang morgen: ${sunsetTomorrow} Uhr`);
+let t6 = widget.addText(
+  `🌇 Sonnenuntergang morgen: ${sunsetTomorrow} Uhr`
+);
 t6.font = Font.systemFont(12);
+t6.textColor = Color.white();
 
 widget.addSpacer();
 
-const endTime = Date.now();
-const loadingTime = ((endTime - startTime)/1000).toFixed(1).replace('.', ',');
+// ======================================================
+// FOOTER
+// ======================================================
 
-// output footer
+const endTime = Date.now();
+
+const loadingTime = (
+  (endTime - startTime) / 1000
+)
+.toFixed(1)
+.replace('.', ',');
+
 let footerStack = widget.addStack();
 footerStack.addSpacer();
 
@@ -251,15 +309,22 @@ let footer = footerStack.addText(
 );
 
 footer.font = Font.systemFont(8);
-footer.textColor = Color.gray();
+footer.textColor = new Color("#FFFFFF", 0.7);
+
+// ======================================================
+// OUTPUT
+// ======================================================
 
 widget.presentMedium();
 Script.setWidget(widget);
 Script.complete();
 
+// ======================================================
+// FUNCTIONS
+// ======================================================
 
-// function extract section from HTML
 function extractSection(html, startKeywords, endKeywords) {
+
   let startIndex = -1;
 
   for (let k of startKeywords) {
@@ -281,29 +346,21 @@ function extractSection(html, startKeywords, endKeywords) {
   return html.substring(startIndex, endIndex);
 }
 
-
-// function extract time for sunrise and sunset
 function matchTime(html, label) {
   let regex = new RegExp(label + "\\s*:?\\s*(\\d{2}:\\d{2})", "i");
   let m = html.match(regex);
   return m ? m[1] : "n/a";
 }
 
-
-// function extract values
 function matchValue(section, regex) {
   let m = section.match(regex);
   return m ? m[1] : "n/a";
 }
 
-
-// function debugDivider
 function logDivider(level) {
   if (debuglevel >= level) console.log("-------------------");
 }
 
-
-// function debugLog
 function debugLog(level, text) {
   if (debuglevel >= level) console.log(text);
 }
