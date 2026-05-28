@@ -3,12 +3,10 @@
 // Optimierungen ChatGPT
 
 // Version
-const version = "0.10";
+const version = "0.11";
 // 29.05.2026
 
 // ToDo / Bugs / Ideen:
-// Ladezeit reduzieren
-// Kontrolle: Sind alle Werte identisch zu Webseite?
 // ChatGPT alles prüfen und verbessern lassen
 
 const startTime = Date.now();
@@ -91,8 +89,7 @@ let htmlweather = extractSection(
 let htmlwater = extractSection(
   html,
   [
-    "Wassertemperaturen an der Küste",
-    "Wassertemperaturen an der Ostseeküste"
+    "Wassertemperaturen an der Ostseek&uuml;ste von Dar&szlig;/Zingst",
   ],
   [
     "Unterschied zwischen Wassertemperatur und Badetemperatur"
@@ -135,6 +132,14 @@ if (windDirMatch) {
 let sunsetTomorrow = matchTime(html, "Sonnenuntergang morgen");
 
 // debugging
+debugLog(1, "===== HTML weather =====");
+debugLog(1, htmlweather);
+logDivider(1);
+
+debugLog(1, "===== HTML water =====");
+debugLog(1, htmlwater);
+logDivider(1);
+
 debugLog(1, "===== PARSED VALUES =====");
 debugLog(1, `Temperatur: ${temp}`);
 debugLog(1, `Gefühlt: ${feelsLike}`);
@@ -227,7 +232,7 @@ let stand = header.addText(
 stand.font = Font.systemFont(10);
 stand.textColor = new Color("#FFFFFF", 0.8);
 
-widget.addSpacer(6);
+widget.addSpacer(8);
 
 // output data weather
 let t1 = widget.addText(
@@ -236,7 +241,7 @@ let t1 = widget.addText(
 t1.font = Font.systemFont(12);
 t1.textColor = Color.white();
 
-widget.addSpacer(4);
+widget.addSpacer(5);
 
 let t3 = widget.addText(
   `🌊 Wassertemperatur: ${waterTemp}°C`
@@ -260,7 +265,7 @@ let tWind = widget.addText(
 tWind.font = Font.systemFont(12);
 tWind.textColor = Color.white();
 
-widget.addSpacer(4);
+widget.addSpacer(5);
 
 let t6 = widget.addText(
   `🌇 Sonnenuntergang morgen: ${sunsetTomorrow} Uhr`
