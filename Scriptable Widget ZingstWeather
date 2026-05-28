@@ -3,11 +3,10 @@
 // Optimierungen ChatGPT
 
 // Version
-const version = "0.09";
-// 28.05.2026
+const version = "0.10";
+// 29.05.2026
 
 // ToDo / Bugs / Ideen:
-// Verlinkung Webseite bei Anklicken
 // Ladezeit reduzieren
 // Kontrolle: Sind alle Werte identisch zu Webseite?
 // ChatGPT alles prüfen und verbessern lassen
@@ -19,10 +18,7 @@ let debuglevel = 0;
 
 const url = "https://www.zingst.de/ostsee-wetter-zingst";
 
-// ======================================================
-// CACHE HTML (30 Minuten)
-// ======================================================
-
+// cache html 30 minutes
 const cacheMinutes = 30;
 
 const fm = FileManager.local();
@@ -76,13 +72,10 @@ if (fm.fileExists(cachePath)) {
   cacheAgeMinutes = 0;
 }
 
-// HTML vereinheitlichen
+// harmonise html
 html = html.replace(/\s+/g, " ");
 
-// ======================================================
-// HTML ABSCHNITTE
-// ======================================================
-
+// cut html in pieces
 let htmlweather = extractSection(
   html,
   [
@@ -106,10 +99,7 @@ let htmlwater = extractSection(
   ]
 );
 
-// ======================================================
-// DATEN EXTRAHIEREN
-// ======================================================
-
+// extract data
 let temp = matchValue(htmlweather, /Temperatur[^0-9]*(-?\d+)\s?°/i);
 
 let feelsLike = matchValue(htmlweather, /Gefühlte Temperatur[^0-9]*(-?\d+)\s?°/i);
@@ -144,10 +134,7 @@ if (windDirMatch) {
 
 let sunsetTomorrow = matchTime(html, "Sonnenuntergang morgen");
 
-// ======================================================
-// DEBUG
-// ======================================================
-
+// debugging
 debugLog(1, "===== PARSED VALUES =====");
 debugLog(1, `Temperatur: ${temp}`);
 debugLog(1, `Gefühlt: ${feelsLike}`);
@@ -156,15 +143,12 @@ debugLog(1, `Wellenhöhe: ${waveHeight}`);
 debugLog(1, `Wind: ${windSpeed} km/h`);
 debugLog(1, `Windrichtung: ${windDirection}`);
 
-// ======================================================
-// WIDGET + HINTERGRUND
-// ======================================================
-
+// widget with background
 let widget = new ListWidget();
 
 widget.url = url;
 
-// Hintergrundbild
+// background picture
 const imageUrl = "https://www.ostsee-und-wellness.de/ostseeurlaub/fischland-darss-zingst/urlaub-darss-zingst-gross.jpg";
 
 const bgCachePath = fm.joinPath(
@@ -217,7 +201,7 @@ widget.setPadding(12, 12, 12, 12);
 let header = widget.addStack();
 header.layoutVertically();
 
-// Titel
+// title
 let title = header.addText("Wetter und Wasser im Ostseeheilbad Zingst");
 title.font = Font.boldSystemFont(14);
 title.textColor = Color.white();
@@ -245,10 +229,7 @@ stand.textColor = new Color("#FFFFFF", 0.8);
 
 widget.addSpacer(6);
 
-// ======================================================
-// WETTERDATEN
-// ======================================================
-
+// output data weather
 let t1 = widget.addText(
   `🌡️ Temperatur: ${temp}°C (gefühlt: ${feelsLike}°C)`
 );
@@ -289,10 +270,7 @@ t6.textColor = Color.white();
 
 widget.addSpacer();
 
-// ======================================================
-// FOOTER
-// ======================================================
-
+// footer
 const endTime = Date.now();
 
 const loadingTime = (
