@@ -3,8 +3,8 @@
 // Optimierungen ChatGPT
 
 // Version
-const version = "0.11";
-// 29.05.2026
+const version = "0.13";
+// 28.05.2026
 
 // ToDo / Bugs / Ideen:
 // ChatGPT alles prüfen und verbessern lassen
@@ -12,7 +12,7 @@ const version = "0.11";
 const startTime = Date.now();
 
 // Debuglevel
-let debuglevel = 0;
+let debuglevel = 1;
 
 const url = "https://www.zingst.de/ostsee-wetter-zingst";
 
@@ -150,7 +150,7 @@ debugLog(1, `Windrichtung: ${windDirection}`);
 
 // widget with background
 let widget = new ListWidget();
-
+widget.setPadding(10, 10, 10, 10);
 widget.url = url;
 
 // background picture
@@ -202,13 +202,17 @@ widget.backgroundGradient = overlay;
 
 widget.setPadding(12, 12, 12, 12);
 
+// fonts
+let headerTextSize = 14;
+let mainTextSize = 13;
+
 // header
 let header = widget.addStack();
 header.layoutVertically();
 
 // title
 let title = header.addText("Wetter und Wasser im Ostseeheilbad Zingst");
-title.font = Font.boldSystemFont(14);
+title.font = Font.boldSystemFont(headerTextSize);
 title.textColor = Color.white();
 
 // date / time
@@ -232,45 +236,41 @@ let stand = header.addText(
 stand.font = Font.systemFont(10);
 stand.textColor = new Color("#FFFFFF", 0.8);
 
-widget.addSpacer(8);
+widget.addSpacer();
 
 // output data weather
 let t1 = widget.addText(
-  `🌡️ Temperatur: ${temp}°C (gefühlt: ${feelsLike}°C)`
+  `Lufttemperatur: ${temp}°C (gefühlt: ${feelsLike}°C)`
 );
-t1.font = Font.systemFont(12);
+t1.font = Font.systemFont(mainTextSize);
 t1.textColor = Color.white();
 
 widget.addSpacer(5);
 
 let t3 = widget.addText(
-  `🌊 Wassertemperatur: ${waterTemp}°C`
+  `Wassertemperatur: ${waterTemp}°C`
 );
-t3.font = Font.systemFont(12);
+t3.font = Font.systemFont(mainTextSize);
 t3.textColor = Color.white();
 
-widget.addSpacer(2);
-
 let t4 = widget.addText(
-  `📏 Wellenhöhe: ${waveHeight}`
+  `Wellenhöhe: ${waveHeight}`
 );
-t4.font = Font.systemFont(12);
+t4.font = Font.systemFont(mainTextSize);
 t4.textColor = Color.white();
 
-widget.addSpacer(2);
-
 let tWind = widget.addText(
-  `💨 Wind: ${windSpeed} km/h (${windDirection})`
+  `Wind: ${windSpeed} km/h (${windDirection})`
 );
-tWind.font = Font.systemFont(12);
+tWind.font = Font.systemFont(mainTextSize);
 tWind.textColor = Color.white();
 
 widget.addSpacer(5);
 
 let t6 = widget.addText(
-  `🌇 Sonnenuntergang morgen: ${sunsetTomorrow} Uhr`
+  `Sonnenuntergang (morgen): ${sunsetTomorrow} Uhr`
 );
-t6.font = Font.systemFont(12);
+t6.font = Font.systemFont(mainTextSize);
 t6.textColor = Color.white();
 
 widget.addSpacer();
